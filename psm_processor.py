@@ -8,7 +8,6 @@ import pandas as pd
 def filter_RPs(chunk, ENTRY_NAMES):
     filtered_df = chunk[chunk['Entry Name'].isin(ENTRY_NAMES)]
     filtered_df.dropna(subset=['Observed Modifications'], inplace=True)
-
     return filtered_df
 
 def filter_amino_acids(df, amino_acids):
@@ -18,11 +17,22 @@ def filter_amino_acids(df, amino_acids):
     df = df[aa_mask]
     return df
 
+# Finds all lowercase letters from a sequence of amino acids and returns the amino acid
+# and its position in the sequence. 
+# Lowercase letters indicate localisation sites through the MSFragger Localisation algorithm.
+def find_localisation_position(sequence):
+    localised_sites = []
+    for index, char in enumerate(sequence):
+        if char.islower():
+            localised_sites.append((index, char))
+    return localised_sites
+
 def filter_methyl(df):
     
     mask = df['Observed Modifications'].str.contains('1: Methyl|1: DiMethyl|1: TriMethyl')
     methyl_df = df[mask]
     methyl_df = filter_amino_acids(methyl_df, ['r', 'k']) # Lysine (K) and Arginine (R) are most commonly methylated
+    methyl_df['Localised Sites'] = methyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return methyl_df
 
@@ -30,7 +40,8 @@ def filter_phospho(df):
     
     mask = df['Observed Modifications'].str.contains('1: Phospho')
     phospho_df = df[mask]
-    phospho_df = filter_amino_acids(phospho_df, ['s', 't'])
+    phospho_df = filter_amino_acids(phospho_df, ['s', 't', 'y'])
+    phospho_df['Localised Sites'] = phospho_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return phospho_df
 
@@ -39,6 +50,7 @@ def filter_acetyl(df):
     mask = df['Observed Modifications'].str.contains('1: Acetyl')
     acetyl_df = df[mask]
     #print(acetyl_df)
+    acetyl_df['Localised Sites'] = acetyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return acetyl_df
 
@@ -59,10 +71,17 @@ with pd.ExcelWriter('psm_output.xlsx') as writer:
 
         RP_chunk = filter_RPs(chunk, ENTRY_NAMES)
 
+        # Filter based on observed modification and appropriate amino acid being modified. 
+        # Search for normal and N-terminal modifications
         methyl_chunk = filter_methyl(RP_chunk)
         phospho_chunk = filter_phospho(RP_chunk)
         acetyl_chunk = filter_acetyl(RP_chunk)
 
+        # Apply localisation to all chunks and append a column of all potential modification sites
+        # Filter out any 'bad' N-terminal modifications
+
+
+        # Write all chunks to separate sheets in excel
         methyl_chunk.to_excel(writer, sheet_name='Methylation', index=False)
         phospho_chunk.to_excel(writer, sheet_name='Phosphorylation', index=False)
         acetyl_chunk.to_excel(writer, sheet_name='Acetylation', index=False)
@@ -70,5 +89,6 @@ with pd.ExcelWriter('psm_output.xlsx') as writer:
         RP_chunk.to_csv('psm_rp_only.tsv', sep='\t', index=False)
 
 
-
-    
+# print(find_localisation_position('KQSGYGGQTkPIFR'))
+# print(find_localisation_position('KDLLHPSPEEE'))
+# print(find_localisation_position('KDLLHpsPEEE'))
