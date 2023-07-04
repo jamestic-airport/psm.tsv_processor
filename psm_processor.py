@@ -10,7 +10,8 @@ import pandas as pd
 #######################
 
 # Given a df containing standard MSFragger psm.tsv output, it isolates ribosomal proteins. This list of RPs can be modified in the 
-# accompanying excel file. Entries with no Observed Modifications are also removed.
+# accompanying excel file. Entries with no Observed Modifications are also removed. Any empty MSFragger Localization cells 
+# are replaced with 'NONE'
 def filter_RPs(chunk, ENTRY_NAMES):
     df = chunk[chunk['Entry Name'].isin(ENTRY_NAMES)]
     filtered_df = df.dropna(subset=['Observed Modifications'])
@@ -88,15 +89,41 @@ def filter_acetyl(df):
 # lOCALISATION FUNCTIONS #
 ##########################
 
-# Finds all lowercase letters from a sequence of amino acids and returns the amino acid
-# and its position in the sequence. 
 # Lowercase letters indicate localisation sites through the MSFragger Localisation algorithm.
-def find_localisation_position(sequence):
+# Finds all lowercase letters from a sequence of amino acids and returns the amino acid
+# and its position in the sequence. This position can be 'N-terminal'.
+def find_localisation_position(sequence, start, ptm):
+    start = int(start)
     localised_sites = []
     for index, char in enumerate(sequence):
         if char.islower():
-            localised_sites.append((index, char))
+            localised_sites.append((index + start, char))
+    localised_sites = clean_localised_sites(localised_sites, ptm)
     return localised_sites
+
+# Starts with a list of tuples [(2, 'a'), (3, 's'), (4, 'v')] and converts 
+# it to a clean list that looks like A2, S3, V4.
+# If the number is 2, this modification is classified as an N terminal modification
+# Only relevant amino acids are selected based on the given ptm type.
+def clean_localised_sites(localised_sites, ptm):
+    clean_sites = []    
+    for num, char in localised_sites:
+        if num == 2:
+            return 'N-terminal'
+        if ptm == 'methyl':
+            if char in ['r', 'k']:   
+                clean_sites.append(char.upper() + str(num))
+        if ptm == 'phospho':
+            if char in ['s', 't', 'y']:   
+                clean_sites.append(char.upper() + str(num))
+        if ptm == 'acetyl':
+            if char in ['r', 'k', 's', 't', 'y']:   
+                clean_sites.append(char.upper() + str(num))
+    delimiter = ', '
+    clean_sites = delimiter.join(clean_sites)   
+    if len(clean_sites) == 0:
+        return 'NONE'
+    return clean_sites
 
 ####################
 ### psm_rp_only ####
@@ -122,11 +149,11 @@ with pd.ExcelWriter('psm_output.xlsx') as writer:
 
         # Apply localisation to all chunks and append a column of all potential modification sites
         # Filter out any 'bad' N-terminal modifications
-        # methyl_df['Localised Sites'] = methyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
-        # phospho_df['Localised Sites'] = phospho_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
-        # acetyl_df['Localised Sites'] = acetyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
+        methyl_chunk['Localised Sites'] = methyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'methyl'), axis=1)
+        phospho_chunk['Localised Sites'] = phospho_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'phospho'), axis=1)
+        acetyl_chunk['Localised Sites'] = acetyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'acetyl'), axis=1)
 
-        # Write all chunks to separate sheets in excel
+        #Write all chunks to separate sheets in excel
         methyl_chunk.to_excel(writer, sheet_name='Methylation', index=False)
         phospho_chunk.to_excel(writer, sheet_name='Phosphorylation', index=False)
         acetyl_chunk.to_excel(writer, sheet_name='Acetylation', index=False)
