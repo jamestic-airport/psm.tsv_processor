@@ -14,13 +14,13 @@ import pandas as pd
 def filter_RPs(chunk, ENTRY_NAMES):
     df = chunk[chunk['Entry Name'].isin(ENTRY_NAMES)]
     filtered_df = df.dropna(subset=['Observed Modifications'])
+    filtered_df.loc[filtered_df['MSFragger Localization'].isna(), 'MSFragger Localization'] = "NONE"
     return filtered_df
 
 # Certain PTMs are only expected to be found on specific amino acid residues. 
 # This function takes in a df of one PTM type, and a list of amino acids.
 # It searches for entries with a localisation site that matches one of the provided amino_acids. 
 def filter_amino_acids(df, amino_acids):
-    df.loc[df['MSFragger Localization'].isna(), 'MSFragger Localization'] = "NONE"
     amino_acids = '[' + ''.join(amino_acids) + ']'
     aa_mask = df['MSFragger Localization'].str.contains(amino_acids, case=True, regex=True)
     df = df[aa_mask]
