@@ -20,7 +20,7 @@ def filter_RPs(chunk, ENTRY_NAMES):
 # This function takes in a df of one PTM type, and a list of amino acids.
 # It searches for entries with a localisation site that matches one of the provided amino_acids. 
 def filter_amino_acids(df, amino_acids):
-    
+    df.loc[df['MSFragger Localization'].isna(), 'MSFragger Localization'] = "NONE"
     amino_acids = '[' + ''.join(amino_acids) + ']'
     aa_mask = df['MSFragger Localization'].str.contains(amino_acids, case=True, regex=True)
     df = df[aa_mask]
@@ -43,8 +43,6 @@ def filter_methyl(df):
 
     methyl_df = pd.concat([mods, nterm_mods], ignore_index = True)
 
-    # methyl_df['Localised Sites'] = methyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
-
     return methyl_df
 
 # In MSFragger closed searches, phosphorylation has the following entries:
@@ -64,8 +62,6 @@ def filter_phospho(df):
 
     phospho_df = pd.concat([mods, nterm_mods], ignore_index = True)
 
-    # phospho_df['Localised Sites'] = phospho_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
-
     return phospho_df
 
 # In MSFragger closed searches, acetylation has the following entries:
@@ -84,8 +80,6 @@ def filter_acetyl(df):
     nterm_mods = acetyl_mods[acetyl_mods['Protein Start'] <= 5]
 
     acetyl_df = pd.concat([mods, nterm_mods], ignore_index = True)
-    
-    # acetyl_df['Localised Sites'] = acetyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return acetyl_df
 
@@ -128,7 +122,9 @@ with pd.ExcelWriter('psm_output.xlsx') as writer:
 
         # Apply localisation to all chunks and append a column of all potential modification sites
         # Filter out any 'bad' N-terminal modifications
-
+        # methyl_df['Localised Sites'] = methyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
+        # phospho_df['Localised Sites'] = phospho_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
+        # acetyl_df['Localised Sites'] = acetyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
         # Write all chunks to separate sheets in excel
         methyl_chunk.to_excel(writer, sheet_name='Methylation', index=False)
