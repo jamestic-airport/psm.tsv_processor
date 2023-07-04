@@ -6,8 +6,8 @@ import pandas as pd
 # psm_rp_only is simply a .tsv file only containins ribosomal proteins
 
 def filter_RPs(chunk, ENTRY_NAMES):
-    filtered_df = chunk[chunk['Entry Name'].isin(ENTRY_NAMES)]
-    filtered_df.dropna(subset=['Observed Modifications'], inplace=True)
+    df = chunk[chunk['Entry Name'].isin(ENTRY_NAMES)]
+    filtered_df = df.dropna(subset=['Observed Modifications'])
     return filtered_df
 
 def filter_amino_acids(df, amino_acids):
@@ -30,27 +30,42 @@ def find_localisation_position(sequence):
 def filter_methyl(df):
     
     mask = df['Observed Modifications'].str.contains('1: Methyl|1: DiMethyl|1: TriMethyl')
-    methyl_df = df[mask]
-    methyl_df = filter_amino_acids(methyl_df, ['r', 'k']) # Lysine (K) and Arginine (R) are most commonly methylated
-    methyl_df['Localised Sites'] = methyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
+    methyl_mods = df[mask]
+
+    mods = filter_amino_acids(methyl_mods, ['r', 'k']) # Lysine (K) and Arginine (R) are most commonly methylated
+    nterm_mods = methyl_mods[methyl_mods['Protein Start'] <= 5]
+
+    methyl_df = pd.concat([mods, nterm_mods], ignore_index = True)
+
+    # methyl_df['Localised Sites'] = methyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return methyl_df
 
 def filter_phospho(df):
     
     mask = df['Observed Modifications'].str.contains('1: Phospho')
-    phospho_df = df[mask]
-    phospho_df = filter_amino_acids(phospho_df, ['s', 't', 'y'])
-    phospho_df['Localised Sites'] = phospho_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
+    phospho_mods = df[mask]
+
+    mods = filter_amino_acids(phospho_mods, ['s', 't', 'y'])
+    nterm_mods = phospho_mods[phospho_mods['Protein Start'] <= 5]
+
+    phospho_df = pd.concat([mods, nterm_mods], ignore_index = True)
+
+    # phospho_df['Localised Sites'] = phospho_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return phospho_df
 
 def filter_acetyl(df):
     
     mask = df['Observed Modifications'].str.contains('1: Acetyl')
-    acetyl_df = df[mask]
-    #print(acetyl_df)
-    acetyl_df['Localised Sites'] = acetyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
+    acetyl_mods = df[mask]
+    
+    mods = filter_amino_acids(acetyl_mods, ['r', 'k', 's', 't', 'y'])
+    nterm_mods = acetyl_mods[acetyl_mods['Protein Start'] <= 5]
+
+    acetyl_df = pd.concat([mods, nterm_mods], ignore_index = True)
+    
+    # acetyl_df['Localised Sites'] = acetyl_df['MSFragger Localization'].apply(lambda x: find_localisation_position(x))
 
     return acetyl_df
 
