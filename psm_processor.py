@@ -5,11 +5,20 @@ import pandas as pd
 #  
 # psm_rp_only is simply a .tsv file only containins ribosomal proteins
 
+#######################
+# FILTERING FUNCTIONS #
+#######################
+
+# Given a df containing standard MSFragger psm.tsv output, it isolates ribosomal proteins. This list of RPs can be modified in the 
+# accompanying excel file. Entries with no Observed Modifications are also removed.
 def filter_RPs(chunk, ENTRY_NAMES):
     df = chunk[chunk['Entry Name'].isin(ENTRY_NAMES)]
     filtered_df = df.dropna(subset=['Observed Modifications'])
     return filtered_df
 
+# Certain PTMs are only expected to be found on specific amino acid residues. 
+# This function takes in a df of one PTM type, and a list of amino acids.
+# It searches for entries with a localisation site that matches one of the provided amino_acids. 
 def filter_amino_acids(df, amino_acids):
     
     amino_acids = '[' + ''.join(amino_acids) + ']'
@@ -17,22 +26,19 @@ def filter_amino_acids(df, amino_acids):
     df = df[aa_mask]
     return df
 
-# Finds all lowercase letters from a sequence of amino acids and returns the amino acid
-# and its position in the sequence. 
-# Lowercase letters indicate localisation sites through the MSFragger Localisation algorithm.
-def find_localisation_position(sequence):
-    localised_sites = []
-    for index, char in enumerate(sequence):
-        if char.islower():
-            localised_sites.append((index, char))
-    return localised_sites
-
+# In MSFragger closed searches, methylation has the following entries:
+#   Methyl, DiMethyl/Ethyl, TriMethylation    
+# In MSFragger open searches, methylation has the following entries:
+#   Methylation, di-Methylation, tri-Methylation
+# This functions finds all relevant methylation modifications. 
+# Entries with an expected localisation site are selected. In methylation, this is Lysine (K) and Arginine (R).
+# Potential N-terminal modifications are also selected
 def filter_methyl(df):
     
     mask = df['Observed Modifications'].str.contains('1: Methyl|1: DiMethyl|1: TriMethyl')
     methyl_mods = df[mask]
 
-    mods = filter_amino_acids(methyl_mods, ['r', 'k']) # Lysine (K) and Arginine (R) are most commonly methylated
+    mods = filter_amino_acids(methyl_mods, ['r', 'k']) # 
     nterm_mods = methyl_mods[methyl_mods['Protein Start'] <= 5]
 
     methyl_df = pd.concat([mods, nterm_mods], ignore_index = True)
@@ -41,6 +47,13 @@ def filter_methyl(df):
 
     return methyl_df
 
+# In MSFragger closed searches, phosphorylation has the following entries:
+#   Phospho   
+# In MSFragger open searches, phosphorylation has the following entries:
+#   Phosphorylation
+# This functions finds all relevant phosphorylation modifications. 
+# Entries with an expected localisation site are selected. In phosphorylation, this is Serine (S), Threonine (T) and Tyrosine (Y).
+# Potential N-terminal modifications are also selected
 def filter_phospho(df):
     
     mask = df['Observed Modifications'].str.contains('1: Phospho')
@@ -55,6 +68,13 @@ def filter_phospho(df):
 
     return phospho_df
 
+# In MSFragger closed searches, acetylation has the following entries:
+#   Acetyl   
+# In MSFragger open searches, acetylation has the following entries:
+#   Acetylation
+# This functions finds all relevant acetylation modifications. 
+# Entries with an expected localisation site are selected. In acetylation, this is ????.
+# Potential N-terminal modifications are also selected
 def filter_acetyl(df):
     
     mask = df['Observed Modifications'].str.contains('1: Acetyl')
@@ -69,6 +89,20 @@ def filter_acetyl(df):
 
     return acetyl_df
 
+
+##########################
+# lOCALISATION FUNCTIONS #
+##########################
+
+# Finds all lowercase letters from a sequence of amino acids and returns the amino acid
+# and its position in the sequence. 
+# Lowercase letters indicate localisation sites through the MSFragger Localisation algorithm.
+def find_localisation_position(sequence):
+    localised_sites = []
+    for index, char in enumerate(sequence):
+        if char.islower():
+            localised_sites.append((index, char))
+    return localised_sites
 
 ####################
 ### psm_rp_only ####
