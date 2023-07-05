@@ -76,7 +76,7 @@ def filter_acetyl(df):
     
     mask = df['Observed Modifications'].str.contains('1: Acetyl')
     acetyl_mods = df[mask]
-    
+
     mods = filter_amino_acids(acetyl_mods, ['r', 'k', 's', 't', 'y'])
     nterm_mods = acetyl_mods[acetyl_mods['Protein Start'] <= 5]
 
@@ -125,10 +125,10 @@ def clean_localised_sites(localised_sites, ptm):
         return 'NONE'
     return clean_sites
 
+
 ####################
-### psm_rp_only ####
+###### main ########
 ####################
-# This file only includes the ribosomal proteins that are found in psm.tsv 
 
 # Create a set of Entry Names to filter names in psm.tsv
 df = pd.read_excel('Human_Ribosome_List.xlsx')
@@ -137,30 +137,30 @@ chunk_size = 1000000 # 1 million rows per chunk
 
 with pd.ExcelWriter('psm_output.xlsx') as writer:
 
-    for chunk in pd.read_csv('psm_test.tsv', delimiter='\t', chunksize=chunk_size):
+    for chunk in pd.read_csv('psm.tsv', delimiter='\t', chunksize=chunk_size):
 
         RP_chunk = filter_RPs(chunk, ENTRY_NAMES)
 
         # Filter based on observed modification and appropriate amino acid being modified. 
         # Search for normal and N-terminal modifications
-        methyl_chunk = filter_methyl(RP_chunk)
-        phospho_chunk = filter_phospho(RP_chunk)
-        acetyl_chunk = filter_acetyl(RP_chunk)
-
         # Apply localisation to all chunks and append a column of all potential modification sites
         # Filter out any 'bad' N-terminal modifications
-        methyl_chunk['Localised Sites'] = methyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'methyl'), axis=1)
-        phospho_chunk['Localised Sites'] = phospho_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'phospho'), axis=1)
-        acetyl_chunk['Localised Sites'] = acetyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'acetyl'), axis=1)
-
-        #Write all chunks to separate sheets in excel
-        methyl_chunk.to_excel(writer, sheet_name='Methylation', index=False)
-        phospho_chunk.to_excel(writer, sheet_name='Phosphorylation', index=False)
-        acetyl_chunk.to_excel(writer, sheet_name='Acetylation', index=False)
+        
+        methyl_chunk = filter_methyl(RP_chunk)
+        if not methyl_chunk.empty:
+            methyl_chunk['Localised Sites'] = methyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'methyl'), axis=1)
+            methyl_chunk.to_excel(writer, sheet_name='Methylation', index=False)
+        
+        phospho_chunk = filter_phospho(RP_chunk)
+        if not phospho_chunk.empty:
+            phospho_chunk['Localised Sites'] = phospho_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'phospho'), axis=1)
+            phospho_chunk.to_excel(writer, sheet_name='Phosphorylation', index=False)
+        
+        acetyl_chunk = filter_acetyl(RP_chunk)
+        if not acetyl_chunk.empty:
+            acetyl_chunk['Localised Sites'] = acetyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'acetyl'), axis=1)
+            acetyl_chunk.to_excel(writer, sheet_name='Acetylation', index=False)
 
         RP_chunk.to_csv('psm_rp_only.tsv', sep='\t', index=False)
 
 
-# print(find_localisation_position('KQSGYGGQTkPIFR'))
-# print(find_localisation_position('KDLLHPSPEEE'))
-# print(find_localisation_position('KDLLHpsPEEE'))
