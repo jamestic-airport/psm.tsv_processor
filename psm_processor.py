@@ -1,6 +1,7 @@
 import pandas as pd
 import sys
 import os
+import re
 
 # This program reads in a psm.tsv file from MSFragger. Its main purpose is to only select rows
 # which are appropriate human ribosomal proteins. 
@@ -141,10 +142,13 @@ if len(sys.argv) > 1:
 else:
     file_path = os.path.join(os.getcwd(), "psm.tsv")
 
-print(file_path)
+# TODO: CLEAN THIS LATER
+dataset_name = file_path.replace("\\", " ")
+dataset_name = dataset_name.replace(":", "")
+
 chunk_size = 1000000 # 1 million rows per chunk
 
-with pd.ExcelWriter('psm_output.xlsx') as writer:
+with pd.ExcelWriter(f'psm_output {dataset_name}.xlsx') as writer:
 
     for chunk in pd.read_csv(file_path, delimiter='\t', chunksize=chunk_size):
 
