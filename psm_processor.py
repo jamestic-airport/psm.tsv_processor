@@ -1,4 +1,6 @@
 import pandas as pd
+import sys
+import os
 
 # This program reads in a psm.tsv file from MSFragger. Its main purpose is to only select rows
 # which are appropriate human ribosomal proteins. 
@@ -133,11 +135,18 @@ def clean_localised_sites(localised_sites, ptm):
 # Create a set of Entry Names to filter names in psm.tsv
 df = pd.read_excel('Human_Ribosome_List.xlsx')
 ENTRY_NAMES = set(df['Entry Name'])
+
+if len(sys.argv) > 1:
+    file_path = sys.argv[1]
+else:
+    file_path = os.path.join(os.getcwd(), "psm.tsv")
+
+print(file_path)
 chunk_size = 1000000 # 1 million rows per chunk
 
 with pd.ExcelWriter('psm_output.xlsx') as writer:
 
-    for chunk in pd.read_csv('psm.tsv', delimiter='\t', chunksize=chunk_size):
+    for chunk in pd.read_csv(file_path, delimiter='\t', chunksize=chunk_size):
 
         RP_chunk = filter_RPs(chunk, ENTRY_NAMES)
 
