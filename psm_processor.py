@@ -149,16 +149,19 @@ with pd.ExcelWriter('psm_output.xlsx') as writer:
         methyl_chunk = filter_methyl(RP_chunk)
         if not methyl_chunk.empty:
             methyl_chunk['Localised Sites'] = methyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'methyl'), axis=1)
+            methyl_chunk['Full Localisation Sites'] = methyl_chunk['Gene'] + ' ' + methyl_chunk['Localised Sites']
             methyl_chunk.to_excel(writer, sheet_name='Methylation', index=False)
         
         phospho_chunk = filter_phospho(RP_chunk)
         if not phospho_chunk.empty:
             phospho_chunk['Localised Sites'] = phospho_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'phospho'), axis=1)
+            phospho_chunk['Full Localisation Sites'] = phospho_chunk['Gene'] + ' ' + phospho_chunk['Localised Sites']
             phospho_chunk.to_excel(writer, sheet_name='Phosphorylation', index=False)
         
         acetyl_chunk = filter_acetyl(RP_chunk)
         if not acetyl_chunk.empty:
             acetyl_chunk['Localised Sites'] = acetyl_chunk.apply(lambda row: find_localisation_position(row['MSFragger Localization'], row['Protein Start'], 'acetyl'), axis=1)
+            acetyl_chunk['Full Localisation Sites'] = acetyl_chunk['Gene'] + ' ' + acetyl_chunk['Localised Sites']
             acetyl_chunk.to_excel(writer, sheet_name='Acetylation', index=False)
 
         RP_chunk.to_csv('psm_rp_only.tsv', sep='\t', index=False)
