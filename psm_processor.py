@@ -137,10 +137,12 @@ def clean_localised_sites(localised_sites, ptm):
 df = pd.read_excel('Human_Ribosome_List.xlsx')
 ENTRY_NAMES = set(df['Entry Name'])
 
-if len(sys.argv) > 1:
+if len(sys.argv) == 3:
     file_path = sys.argv[1]
+    output_path = sys.argv[2]
 else:
-    file_path = os.path.join(os.getcwd(), "psm.tsv")
+    print("INSUFFICIENT NUMBER OF ARGUMENTS")
+    sys.exit()
 
 # TODO: CLEAN THIS LATER
 pattern = r"\\psm.tsv_processor\\(.*?)\\psm.tsv"
@@ -154,9 +156,12 @@ else:
 dataset_name = dataset_name.replace("\\", " ")
 dataset_name = dataset_name.replace(":", "")
 
+file_name = f'psm_output {dataset_name}.xlsx'
+output_path = os.path.join(output_path, file_name)
+
 chunk_size = 1000000 # 1 million rows per chunk
 
-with pd.ExcelWriter(f'psm_output {dataset_name}.xlsx') as writer:
+with pd.ExcelWriter(output_path) as writer:
 
     for chunk in pd.read_csv(file_path, delimiter='\t', chunksize=chunk_size):
 
