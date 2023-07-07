@@ -143,7 +143,15 @@ else:
     file_path = os.path.join(os.getcwd(), "psm.tsv")
 
 # TODO: CLEAN THIS LATER
-dataset_name = file_path.replace("\\", " ")
+pattern = r"\\psm.tsv_processor\\(.*?)\\psm.tsv"
+match = re.search(pattern, file_path) # Finds the first match
+
+if match:
+    dataset_name = match.group(1)
+else:
+    dataset_name = 'curr_dir\psm.tsv'
+
+dataset_name = dataset_name.replace("\\", " ")
 dataset_name = dataset_name.replace(":", "")
 
 chunk_size = 1000000 # 1 million rows per chunk
