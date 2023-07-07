@@ -8,6 +8,26 @@ import re
 #  
 # psm_rp_only is simply a .tsv file only containins ribosomal proteins
 
+
+# TODO: CLEAN THIS LATER
+def get_output_path(file_path, output_path):
+   
+    pattern = r"\\psm.tsv_processor\\(.*?)\\psm.tsv"
+    match = re.search(pattern, file_path) # Finds the first match
+
+    if match:
+        dataset_name = match.group(1)
+    else:
+        dataset_name = 'curr_dir\psm.tsv'
+
+    dataset_name = dataset_name.replace("\\", " ")
+    dataset_name = dataset_name.replace(":", "")
+
+    file_name = f'{dataset_name}.xlsx'
+    output_path = os.path.join(output_path, file_name)
+
+    return output_path
+
 #######################
 # FILTERING FUNCTIONS #
 #######################
@@ -139,25 +159,10 @@ ENTRY_NAMES = set(df['Entry Name'])
 
 if len(sys.argv) == 3:
     file_path = sys.argv[1]
-    output_path = sys.argv[2]
+    output_path = get_output_path(file_path, sys.argv[2])
 else:
     print("INSUFFICIENT NUMBER OF ARGUMENTS")
     sys.exit()
-
-# TODO: CLEAN THIS LATER
-pattern = r"\\psm.tsv_processor\\(.*?)\\psm.tsv"
-match = re.search(pattern, file_path) # Finds the first match
-
-if match:
-    dataset_name = match.group(1)
-else:
-    dataset_name = 'curr_dir\psm.tsv'
-
-dataset_name = dataset_name.replace("\\", " ")
-dataset_name = dataset_name.replace(":", "")
-
-file_name = f'psm_output {dataset_name}.xlsx'
-output_path = os.path.join(output_path, file_name)
 
 chunk_size = 1000000 # 1 million rows per chunk
 
