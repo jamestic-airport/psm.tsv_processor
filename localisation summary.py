@@ -31,8 +31,16 @@ def add_database_names(df, file_name):
     return df
 
 
-def create_file(df):
+def create_output_files(df):
+
+    # Overall summary
     df.to_excel('Summary.xlsx', index=False)  # Specify the file name and remove index column
+
+    # Summary separated by PTM type
+    with pd.ExcelWriter('Summary by PTM.xlsx') as excel_file:
+
+        for ptm, group in df.groupby('PTM'):
+            group.to_excel(excel_file, sheet_name=ptm, index=False)
 
 
 # Iterate over each file in the directory
@@ -44,7 +52,7 @@ for file_name in get_file_names():
     add_database_names(counts, file_name)
     all_counts = pd.concat([all_counts, counts], ignore_index=True)
 
-create_file(all_counts)
+create_output_files(all_counts)
 
 
 
