@@ -17,7 +17,11 @@ def run_psm_processor(file_path, output_directory):
     if os.path.isfile(file_path):
         print(f'Analysing {file_path}...')
         subprocess.run(["python", "psm_processor.py", file_path, output_directory])
-        
+
+def run_localisation_summary():
+    print('Summarising output files...')
+    subprocess.run(["python", "localisation summary.py", file_path, output_directory])
+
 
 ########################
 ##### MAIN SCRIPT ######
@@ -29,3 +33,6 @@ psm_files = find_all_psm_files()
 # Run psm_processor.py for each psm.tsv file found, passing the output_directory
 for file_path in psm_files:
     run_psm_processor(file_path, output_directory)
+
+run_localisation_summary()
+
