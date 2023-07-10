@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import pprint
 
-def get_file_names():
+def get_psm_processor_output_files():
     excel_files = []
     directory = os.path.join(os.getcwd(), 'output')
     for filename in os.listdir(directory):
@@ -43,11 +43,13 @@ def create_output_files(df):
             group.to_excel(excel_file, sheet_name=ptm, index=False)
 
 
-# Iterate over each file in the directory
+##################
+##### MAIN  ######
+##################
 
 all_counts = pd.DataFrame()
 
-for file_name in get_file_names():
+for file_name in get_psm_processor_output_files():
     counts = get_ptm_counts(file_name)
     add_database_names(counts, file_name)
     all_counts = pd.concat([all_counts, counts], ignore_index=True)
