@@ -30,14 +30,22 @@ def add_database_names(df, file_name):
     df.insert(0, 'Dataset', file_name[:-5]) # Removes .xlsx from the end
     return df
 
+def create_output_folder():
+    path = os.path.join(os.getcwd(), 'summary output')
+    if os.path.exists(path):
+        # If the folder already exists, remove it
+        print("Overwriting pre-existing summary output folder...")
+        os.rmdir(path)
+
+    os.makedirs(path)
 
 def create_output_files(df):
 
     # Overall summary
-    df.to_excel('Summary.xlsx', index=False)  # Specify the file name and remove index column
+    df.to_excel('summary output/summary.xlsx', index=False)  # Specify the file name and remove index column
 
     # Summary separated by PTM type
-    with pd.ExcelWriter('Summary by PTM.xlsx') as excel_file:
+    with pd.ExcelWriter('summary output/summary by PTM.xlsx') as excel_file:
 
         for ptm, group in df.groupby('PTM'):
             group.to_excel(excel_file, sheet_name=ptm, index=False)
@@ -54,6 +62,7 @@ for file_name in get_psm_processor_output_files():
     add_database_names(counts, file_name)
     all_counts = pd.concat([all_counts, counts], ignore_index=True)
 
+create_output_folder()
 create_output_files(all_counts)
 
 
