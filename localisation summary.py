@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-import pprint
+import shutil
 
 def get_psm_processor_output_files():
     excel_files = []
@@ -35,7 +35,8 @@ def create_output_folder():
     if os.path.exists(path):
         # If the folder already exists, remove it
         print("Overwriting pre-existing summary output folder...")
-        os.rmdir(path)
+        print(path)
+        shutil.rmtree(path)
 
     os.makedirs(path)
 
