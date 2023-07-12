@@ -6,6 +6,8 @@ import pandas as pd
 import pprint
 from upsetplot import from_contents, UpSet
 from matplotlib import pyplot
+import os
+import shutil
 
 def get_input_file():
     excel_file = pd.ExcelFile('summary output/Summary by PTM.xlsx')
@@ -25,15 +27,25 @@ def get_dict(sheet):
             ptm_dict[key] = [mod_site]
     return ptm_dict
 
+def create_output_folder():
+    path = os.path.join(os.getcwd(), 'upset plot output')
+    if os.path.exists(path):
+        # If the folder already exists, remove it
+        print("Overwriting pre-existing upset plot output folder...") 
+        shutil.rmtree(path)
+
+    os.makedirs(path)
+
 def generate_upset_plots(ptm_type, ptm_dict):
     print(f'Generating upset plot for {ptm_type}...')
     upset = from_contents(ptm_dict)
     ax_dict = UpSet(upset, subset_size='count').plot()
     #pyplot.show()   
-    pyplot.savefig(f"{ptm_type}.pdf")  
+    pyplot.savefig(f"upset plot output/{ptm_type}.pdf")  
     
 
 excel_file = get_input_file()
+create_output_folder()
 for sheet in excel_file.sheet_names:
     ptm_dict = get_dict(sheet)
     generate_upset_plots(sheet, ptm_dict)
