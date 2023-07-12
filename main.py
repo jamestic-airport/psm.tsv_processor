@@ -20,8 +20,11 @@ def run_psm_processor(file_path, output_directory):
 
 def run_localisation_summary():
     print('Summarising output files...')
-    subprocess.run(["python", "localisation summary.py", file_path, output_directory])
+    subprocess.run(["python", "localisation summary.py"])
 
+def run_upset():
+    print('Generating upset plots...')
+    subprocess.run(["python", "upset.py"])
 
 ########################
 ##### MAIN SCRIPT ######
@@ -35,4 +38,5 @@ for file_path in psm_files:
     run_psm_processor(file_path, output_directory)
 
 run_localisation_summary()
+run_upset()
 

@@ -34,8 +34,7 @@ def create_output_folder():
     path = os.path.join(os.getcwd(), 'summary output')
     if os.path.exists(path):
         # If the folder already exists, remove it
-        print("Overwriting pre-existing summary output folder...")
-        print(path)
+        print("Overwriting pre-existing summary output folder...") 
         shutil.rmtree(path)
 
     os.makedirs(path)
@@ -65,6 +64,8 @@ for file_name in get_psm_processor_output_files():
 
 create_output_folder()
 create_output_files(all_counts)
+
+print('Summary Complete!')
 
 
 
